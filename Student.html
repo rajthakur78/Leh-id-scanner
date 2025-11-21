@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEH ID Card Scanner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      position: relative;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #1e3c72;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin: 8px auto;
+      font-weight: bold;
+      text-align: center;
+      max-width: 300px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .logo-main { 
+      font-size: 32px; 
+      font-weight: 900; 
+      letter-spacing: 2px;
+    }
+    .logo-sub { 
+      font-size: 12px; 
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .instructions {
+      background: #fff3cd;
+      color: #856404;
+      padding: 12px 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      border: 1px solid #ffeaa7;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .camera-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 10px 0;
+      flex: 0 0 auto;
+    }
+
+    .camera-container {
+      width: 90%;
+      max-width: 600px;
+      height: 45vh;
+      background: #000;
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+      border: 3px solid #ffcc00;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    #video { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+    }
+
+    .scan-overlay {
+      position: absolute;
+      top: 50%; 
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%; 
+      height: 65%;
+      border: 3px solid #00ff00;
+      border-radius: 12px;
+      background: rgba(0, 255, 0, 0.1);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+    }
+
+    .scan-text {
+      position: absolute;
+      bottom: -40px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: #00ff00;
+      font-weight: bold;
+      font-size: 16px;
+      text-shadow: 0 0 5px rgba(0,0,0,0.8);
+      z-index: 11;
+    }
+
+    .controls-section {
+      padding: 15px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .manual-section {
+      background: #e7f3ff;
+      color: #004085;
+      padding: 12px 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      min-width: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary { 
+      background: linear-gradient(to bottom, #4CAF50, #45a049);
+      color: white; 
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #45a049, #3d8b40);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+    }
+    .btn-secondary { 
+      background: linear-gradient(to bottom, #f44336, #d32f2f);
+      color: white; 
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #d32f2f, #c62828);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+    }
+    .btn-verify { 
+      background: linear-gradient(to bottom, #2196F3, #1976D2);
+      color: white; 
+    }
+    .btn-verify:hover:not(:disabled) {
+      background: linear-gradient(to bottom, #1976D2, #1565C0);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+    }
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .btn:disabled { 
+      background: #b0b0b0; 
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .status {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 10px 0;
+      border: 2px solid #dee2e6;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.5s;
+    }
+    .status.verified { 
+      background: #d4edda; 
+      border-color: #28a745; 
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+
+    #statusText {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+      text-align: center;
+    }
+    .verified-tick { 
+      font-size: 42px; 
+      display: none; 
+    }
+    .show { 
+      display: block; 
+      animation: bounce 0.6s; 
+    }
+    @keyframes bounce {
+      0%,20%,60%,100% { transform: scale(1); }
+      40% { transform: scale(1.3); }
+      80% { transform: scale(1.1); }
+    }
+
+    .key-hint {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    @media (max-height: 700px) {
+      .header {
+        margin-bottom: 5px;
+        padding: 5px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .camera-container {
+        height: 40vh;
+      }
+      
+      .camera-section {
+        margin: 5px 0;
+      }
+      
+      .controls-section {
+        padding: 10px 0;
+      }
+      
+      .btn {
+        padding: 12px 20px;
+        min-width: 140px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 10px;
+      }
+      
+      .camera-container {
+        width: 95%;
+        height: 40vh;
+      }
+      
+      .controls {
+        gap: 10px;
+      }
+      
+      .btn {
+        padding: 12px 16px;
+        font-size: 14px;
+        min-width: 130px;
+      }
+      
+      .scan-overlay {
+        width: 85%;
+        height: 60%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- <div class="container">
+    <div class="header">
+      <h1>LEH ID CARD SCANNER</h1>
+      <div class="logo">
+        <div class="logo-main">LEH</div>
+        <div class="logo-sub">LEARNING EDUCATION HUB</div>
+      </div>
+    </div> -->
+
+    <!-- <div class="instructions">
+      <strong>INSTRUCTIONS:</strong><br>
+      1. Click START CAMERA<br>
+      2. Show LEH ID Card in green box<br>
+      3. Click VERIFY NOW when ready
+    </div> -->
+
+    <div class="camera-section">
+      <div class="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="scan-overlay">
+          <div class="scan-text">Position ID Card Inside This Box</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div class="controls-section">
+      <div class="manual-section">
+        <strong>MANUAL VERIFICATION:</strong><br>
+        Show ID card and click VERIFY NOW or press SPACE
+      </div> -->
+
+      <div class="controls">
+        <button id="startBtn" class="btn btn-primary">
+          <span>▶</span> START CAMERA
+        </button>
+        <button id="stopBtn" class="btn btn-secondary" disabled>
+          <span>⏹</span> STOP CAMERA
+        </button>
+        <button id="verifyBtn" class="btn btn-verify" disabled>
+          <span>✓</span> VERIFY NOW
+        </button>
+      </div>
+
+      <div class="status" id="statusBox">
+        <div id="statusText">Camera not started</div>
+        <div id="verifiedTick" class="verified-tick">✅</div>
+        <div class="key-hint">Press SPACE to verify when camera is active</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class LEHScanner {
+      constructor() {
+        this.video = document.getElementById('video');
+        this.statusText = document.getElementById('statusText');
+        this.verifiedTick = document.getElementById('verifiedTick');
+        this.statusBox = document.getElementById('statusBox');
+
+        this.startBtn = document.getElementById('startBtn');
+        this.stopBtn = document.getElementById('stopBtn');
+        this.verifyBtn = document.getElementById('verifyBtn');
+
+        this.stream = null;
+        this.isVerified = false;
+
+        this.setupEventListeners();
+      }
+
+      setupEventListeners() {
+        this.startBtn.addEventListener('click', () => this.startCamera());
+        this.stopBtn.addEventListener('click', () => this.stopCamera());
+        this.verifyBtn.addEventListener('click', () => this.verifyStudent());
+
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space' && this.stream && !this.isVerified) {
+            e.preventDefault();
+            this.verifyStudent();
+          }
+        });
+      }
+
+      async startCamera() {
+        try {
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'user',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          });
+
+          this.video.srcObject = this.stream;
+          this.video.onloadedmetadata = () => {
+            this.video.play();
+            this.startBtn.disabled = true;
+            this.stopBtn.disabled = false;
+            this.verifyBtn.disabled = false;
+            this.statusText.textContent = "Front camera ready! Show ID Card and click VERIFY NOW";
+          };
+
+        } catch (error) {
+          console.error('Camera error:', error);
+          let errorMessage = 'Camera Error: ';
+          if (error.name === 'NotAllowedError') {
+            errorMessage += 'Please allow camera permission';
+          } else if (error.name === 'NotFoundError') {
+            errorMessage += 'No camera found';
+          } else {
+            errorMessage += 'Please check your camera';
+          }
+          this.statusText.textContent = errorMessage;
+        }
+      }
+
+      stopCamera() {
+        if (this.stream) {
+          this.stream.getTracks().forEach(track => track.stop());
+        }
+        this.isVerified = false;
+        this.startBtn.disabled = false;
+        this.stopBtn.disabled = true;
+        this.verifyBtn.disabled = true;
+        this.statusText.textContent = "Camera stopped";
+        this.hideVerified();
+      }
+
+      verifyStudent() {
+        if (this.isVerified) return;
+        this.isVerified = true;
+        this.verifyBtn.disabled = true;
+        this.statusText.textContent = "✅ VERIFIED! Student attendance recorded";
+        this.statusBox.classList.add('verified');
+        this.verifiedTick.classList.add('show');
+        
+        // Auto reset after 4 seconds
+        setTimeout(() => {
+          this.resetForNextStudent();
+        }, 4000);
+      }
+      
+      resetForNextStudent() {
+        this.isVerified = false;
+        this.verifyBtn.disabled = false;
+        
+        this.hideVerified();
+        this.statusText.textContent = "Ready for next student. Show ID Card and click VERIFY NOW";
+        this.statusBox.classList.remove('verified');
+      }
+      
+      hideVerified() {
+        this.verifiedTick.classList.remove('show');
+      }
+    }
+
+    // Initialize scanner when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      new LEHScanner();
+    });
+  </script>
+</body>
+</html>
