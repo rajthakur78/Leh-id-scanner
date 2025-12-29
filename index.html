@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LEH ID Card Scanner</title>
+  <title>LEH Student Attendance System</title>
   <style>
     * {
       box-sizing: border-box;
@@ -17,17 +17,16 @@
       font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #1e3c72, #2a5298);
       color: white;
-      overflow: hidden;
+      overflow: auto;
     }
 
     .container {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      min-height: 100vh;
       padding: 15px;
       background: rgba(255, 255, 255, 0.95);
       color: #333;
-      position: relative;
     }
 
     .header {
@@ -77,18 +76,25 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
+    .main-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 15px 0;
+      flex: 1;
+    }
+
     .camera-section {
+      flex: 1;
+      min-width: 300px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      margin: 10px 0;
-      flex: 0 0 auto;
     }
 
     .camera-container {
-      width: 90%;
-      max-width: 600px;
-      height: 45vh;
+      width: 100%;
+      height: 40vh;
+      min-height: 300px;
       background: #000;
       border-radius: 15px;
       overflow: hidden;
@@ -129,106 +135,244 @@
       z-index: 11;
     }
 
-    .controls-section {
-      padding: 15px 0;
+    .camera-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .camera-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      min-width: 120px;
+    }
+    .camera-btn.start { 
+      background: linear-gradient(to bottom, #4CAF50, #45a049);
+      color: white; 
+    }
+    .camera-btn.stop { 
+      background: linear-gradient(to bottom, #f44336, #d32f2f);
+      color: white; 
+    }
+    .camera-btn:disabled { 
+      background: #b0b0b0; 
+      cursor: not-allowed;
+    }
+
+    .students-section {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-title {
+      background: #1e3c72;
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .students-list {
+      flex: 1;
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      border: 2px solid #dee2e6;
+      overflow-y: auto;
+      max-height: 400px;
+    }
+
+    .student-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s;
+    }
+
+    .student-item.present {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+
+    .student-item.absent {
+      background: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .student-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .student-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .student-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .student-name {
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .student-id {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .check-in-time {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .attendance-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .attendance-btn {
+      padding: 6px 15px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .mark-present {
+      background: #28a745;
+      color: white;
+    }
+
+    .mark-present:hover:not(:disabled) {
+      background: #218838;
+    }
+
+    .mark-absent {
+      background: #dc3545;
+      color: white;
+    }
+
+    .mark-absent:hover:not(:disabled) {
+      background: #c82333;
+    }
+
+    .attendance-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .attendance-status {
+      font-size: 12px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .status-present {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-absent {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .verify-section {
+      width: 100%;
+      margin: 15px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      flex: 1;
-      justify-content: center;
     }
 
-    .manual-section {
-      background: #e7f3ff;
-      color: #004085;
-      padding: 12px 15px;
-      border-radius: 10px;
-      margin: 10px 0;
-      font-size: 14px;
-      text-align: center;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 20px 0;
-      flex-wrap: wrap;
-      width: 100%;
-    }
-    .btn {
-      padding: 14px 28px;
+    .verify-btn {
+      padding: 15px 40px;
       border: none;
       border-radius: 50px;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      min-width: 160px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-primary { 
-      background: linear-gradient(to bottom, #4CAF50, #45a049);
-      color: white; 
-    }
-    .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(to bottom, #45a049, #3d8b40);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
-    }
-    .btn-secondary { 
-      background: linear-gradient(to bottom, #f44336, #d32f2f);
-      color: white; 
-    }
-    .btn-secondary:hover:not(:disabled) {
-      background: linear-gradient(to bottom, #d32f2f, #c62828);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
-    }
-    .btn-verify { 
       background: linear-gradient(to bottom, #2196F3, #1976D2);
-      color: white; 
+      color: white;
+      margin-bottom: 15px;
+      min-width: 200px;
     }
-    .btn-verify:hover:not(:disabled) {
+
+    .verify-btn:hover:not(:disabled) {
       background: linear-gradient(to bottom, #1976D2, #1565C0);
       transform: translateY(-2px);
       box-shadow: 0 6px 12px rgba(0,0,0,0.25);
     }
-    .btn:active:not(:disabled) {
-      transform: translateY(1px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .btn:disabled { 
+
+    .verify-btn:disabled { 
       background: #b0b0b0; 
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
-    .status {
+    .status-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .status-box {
       background: #f8f9fa;
       padding: 20px;
       border-radius: 12px;
-      margin: 10px 0;
       border: 2px solid #dee2e6;
-      min-height: 100px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      width: 90%;
-      max-width: 500px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       transition: all 0.5s;
     }
-    .status.verified { 
+
+    .status-box.verified { 
       background: #d4edda; 
       border-color: #28a745; 
       box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
@@ -241,6 +385,7 @@
       color: #333;
       text-align: center;
     }
+
     .verified-tick { 
       font-size: 42px; 
       display: none; 
@@ -255,147 +400,919 @@
       80% { transform: scale(1.1); }
     }
 
-    .key-hint {
-      font-size: 12px;
-      color: #666;
-      margin-top: 5px;
+    .attendance-summary {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .summary-item {
       text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-width: 120px;
     }
 
-    @media (max-height: 700px) {
-      .header {
-        margin-bottom: 5px;
-        padding: 5px;
-      }
-      
-      h1 {
-        font-size: 24px;
+    .summary-count {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .summary-present {
+      color: #28a745;
+    }
+
+    .summary-absent {
+      color: #dc3545;
+    }
+
+    .summary-total {
+      color: #1e3c72;
+    }
+
+    .database-status {
+      margin-top: 15px;
+      padding: 10px;
+      background: #e7f3ff;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+      color: #004085;
+      display: none;
+    }
+
+    .database-status.show {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
+    .admin-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .admin-btn {
+      padding: 8px 16px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .admin-btn:hover {
+      background: #5a6268;
+    }
+
+    .config-section {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+    }
+
+    .config-input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .config-label {
+      display: block;
+      margin: 5px 0;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .date-info {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin: 5px 0;
+    }
+
+    .export-controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .export-btn {
+      padding: 8px 16px;
+      background: #17a2b8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .export-btn:hover {
+      background: #138496;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
       }
       
       .camera-container {
-        height: 40vh;
+        height: 35vh;
       }
       
-      .camera-section {
-        margin: 5px 0;
-      }
-      
-      .controls-section {
-        padding: 10px 0;
-      }
-      
-      .btn {
-        padding: 12px 20px;
-        min-width: 140px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 10px;
-      }
-      
-      .camera-container {
-        width: 95%;
-        height: 40vh;
-      }
-      
-      .controls {
-        gap: 10px;
-      }
-      
-      .btn {
-        padding: 12px 16px;
-        font-size: 14px;
-        min-width: 130px;
-      }
-      
-      .scan-overlay {
-        width: 85%;
-        height: 60%;
+      .admin-controls, .export-controls {
+        flex-wrap: wrap;
       }
     }
   </style>
 </head>
 <body>
-  <!-- <div class="container">
+  <div class="container">
     <div class="header">
-      <h1>LEH ID CARD SCANNER</h1>
+      <h1>LEH STUDENT ATTENDANCE SYSTEM</h1>
       <div class="logo">
-        <div class="logo-main">LEH</div>
-        <div class="logo-sub">LEARNING EDUCATION HUB</div>
+        <!-- <div class="logo-main">LEH</div>
+        <div class="logo-sub">LEARNING EDUCATION HUB</div> -->
       </div>
-    </div> -->
+      <div id="currentDate" class="date-info"></div>
+      <div class="date-info">Data saves to browser storage - Works 100% offline!</div>
+    </div>
 
     <!-- <div class="instructions">
-      <strong>INSTRUCTIONS:</strong><br>
-      1. Click START CAMERA<br>
-      2. Show LEH ID Card in green box<br>
-      3. Click VERIFY NOW when ready
+      <strong>COMPLETE OFFLINE SYSTEM - NO SERVER NEEDED!</strong><br>
+      1. All data saves in your browser<br>
+      2. Export/Import data anytime<br>
+      3. Only marks PRESENT when scanned/manually marked<br>
+      4. Others remain UNMARKED (NOT absent)
     </div> -->
 
-    <div class="camera-section">
-      <div class="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <div class="scan-overlay">
-          <div class="scan-text">Position ID Card Inside This Box</div>
+    <div class="config-section">
+      <div class="config-label">📅 Today's Date: <span id="todayDate"></span></div>
+      <div class="config-label">💾 Data Management:</div>
+      <div class="export-controls">
+        <button id="exportBtn" class="export-btn">📤 Export All Data</button>
+        <button id="importBtn" class="export-btn">📥 Import Data</button>
+        <button id="resetBtn" class="export-btn" style="background: #dc3545;">🗑️ Reset Today</button>
+        <button id="newDayBtn" class="export-btn" style="background: #28a745;">✨ New Day</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display: none;">
+    </div>
+
+    <div class="main-content">
+      <div class="camera-section">
+        <div class="camera-container">
+          <video id="video" autoplay playsinline></video>
+          <div class="scan-overlay">
+            <div class="scan-text">Scan ID Card Here</div>
+          </div>
+        </div>
+        
+        <div class="camera-controls">
+          <button id="startBtn" class="camera-btn start">START CAMERA</button>
+          <button id="stopBtn" class="camera-btn stop" disabled>STOP CAMERA</button>
+        </div>
+      </div>
+
+      <div class="students-section">
+        <div class="section-title">
+          STUDENTS LIST - CLASS 12A
+          <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
+            Click buttons to mark Present/Absent
+          </div>
+        </div>
+        <div class="students-list" id="studentsList">
+          <!-- Student list will be populated by JavaScript -->
+        </div>
+        <div class="admin-controls">
+          <button id="refreshBtn" class="admin-btn">🔄 Refresh List</button>
+          <button id="addStudentBtn" class="admin-btn">➕ Add Student</button>
+          <button id="markAllAbsentBtn" class="admin-btn">⚠️ Mark All Unmarked as Absent</button>
+          <button id="autoScanBtn" class="admin-btn" style="background: #ffc107; color: #000;">🤖 Auto Scan 5 Students</button>
         </div>
       </div>
     </div>
 
-    <!-- <div class="controls-section">
-      <div class="manual-section">
-        <strong>MANUAL VERIFICATION:</strong><br>
-        Show ID card and click VERIFY NOW or press SPACE
-      </div> -->
+    <div class="verify-section">
+      <button id="verifyBtn" class="verify-btn" disabled>
+        <span>📷</span> SCAN ID CARD (Press SPACE)
+      </button>
 
-      <div class="controls">
-        <button id="startBtn" class="btn btn-primary">
-          <span>▶</span> START CAMERA
-        </button>
-        <button id="stopBtn" class="btn btn-secondary" disabled>
-          <span>⏹</span> STOP CAMERA
-        </button>
-        <button id="verifyBtn" class="btn btn-verify" disabled>
-          <span>✓</span> VERIFY NOW
-        </button>
+      <div class="attendance-summary">
+        <div class="summary-item">
+          <div class="summary-count summary-present" id="presentCount">0</div>
+          <div>Present</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-count" id="unmarkedCount" style="color: #ffc107;">0</div>
+          <div>Unmarked</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-count summary-absent" id="absentCount">0</div>
+          <div>Absent</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-count summary-total" id="totalCount">0</div>
+          <div>Total</div>
+        </div>
       </div>
+    </div>
 
-      <div class="status" id="statusBox">
-        <div id="statusText">Camera not started</div>
+    <div class="status-container">
+      <div class="status-box" id="statusBox">
+        <div id="statusText">Click START CAMERA to begin scanning ID cards</div>
         <div id="verifiedTick" class="verified-tick">✅</div>
-        <div class="key-hint">Press SPACE to verify when camera is active</div>
+      </div>
+      
+      <div class="database-status" id="dbStatus">
+        Data saved to browser storage!
       </div>
     </div>
   </div>
 
   <script>
-    class LEHScanner {
+    // ==================== DATABASE SYSTEM (Browser Storage) ====================
+    class BrowserDatabase {
       constructor() {
-        this.video = document.getElementById('video');
-        this.statusText = document.getElementById('statusText');
-        this.verifiedTick = document.getElementById('verifiedTick');
-        this.statusBox = document.getElementById('statusBox');
+        this.storageKey = 'leh_attendance_system_v2';
+        this.initDatabase();
+      }
 
+      initDatabase() {
+        if (!localStorage.getItem(this.storageKey)) {
+          // Initial sample data
+          const initialData = {
+            students: [
+              { id: 'LEH2024001', name: 'Aarav Sharma', class: '12A' },
+              { id: 'LEH2024002', name: 'Vivaan Patel', class: '12A' },
+              { id: 'LEH2024003', name: 'Aditya Singh', class: '12A' },
+              { id: 'LEH2024004', name: 'Vihaan Kumar', class: '12A' },
+              { id: 'LEH2024005', name: 'Arjun Gupta', class: '12A' },
+              { id: 'LEH2024006', name: 'Sai Reddy', class: '12A' },
+              { id: 'LEH2024007', name: 'Reyansh Joshi', class: '12A' },
+              { id: 'LEH2024008', name: 'Mohammed Khan', class: '12A' },
+              { id: 'LEH2024009', name: 'Ishaan Verma', class: '12A' },
+              { id: 'LEH2024010', name: 'Kabir Malhotra', class: '12A' }
+            ],
+            attendance: {},
+            lastUpdated: new Date().toISOString()
+          };
+          
+          this.saveData(initialData);
+        }
+      }
+
+      getData() {
+        const data = localStorage.getItem(this.storageKey);
+        return data ? JSON.parse(data) : null;
+      }
+
+      saveData(data) {
+        data.lastUpdated = new Date().toISOString();
+        localStorage.setItem(this.storageKey, JSON.stringify(data));
+      }
+
+      getTodayDate() {
+        return new Date().toISOString().split('T')[0];
+      }
+
+      async getStudents() {
+        const data = this.getData();
+        const today = this.getTodayDate();
+        
+        // Initialize today's attendance if not exists
+        if (!data.attendance[today]) {
+          data.attendance[today] = {};
+          this.saveData(data);
+        }
+
+        const studentsWithAttendance = data.students.map(student => {
+          const attendanceRecord = data.attendance[today][student.id];
+          
+          return {
+            ...student,
+            present: attendanceRecord ? attendanceRecord.status === 'present' : false,
+            scanned: !!attendanceRecord,
+            check_in_time: attendanceRecord ? attendanceRecord.time : null
+          };
+        });
+
+        return studentsWithAttendance;
+      }
+
+      async markAttendance(studentId, status) {
+        const data = this.getData();
+        const today = this.getTodayDate();
+        const time = new Date().toTimeString().split(' ')[0];
+        
+        // Initialize today's attendance if not exists
+        if (!data.attendance[today]) {
+          data.attendance[today] = {};
+        }
+        
+        // Save attendance
+        data.attendance[today][studentId] = {
+          status,
+          time,
+          date: today
+        };
+        
+        this.saveData(data);
+        
+        return {
+          success: true,
+          message: `Attendance marked ${status} for student ${studentId}`,
+          time
+        };
+      }
+
+      async getTodayAttendance() {
+        const data = this.getData();
+        const today = this.getTodayDate();
+        
+        if (!data.attendance[today]) {
+          data.attendance[today] = {};
+          this.saveData(data);
+        }
+        
+        const total = data.students.length;
+        let present = 0;
+        let absent = 0;
+        
+        Object.values(data.attendance[today]).forEach(record => {
+          if (record.status === 'present') present++;
+          if (record.status === 'absent') absent++;
+        });
+        
+        return {
+          date: today,
+          total,
+          present,
+          absent,
+          unmarked: total - present - absent
+        };
+      }
+
+      async bulkMarkAbsent() {
+        const data = this.getData();
+        const today = this.getTodayDate();
+        const time = '00:00:00';
+        
+        if (!data.attendance[today]) {
+          data.attendance[today] = {};
+        }
+        
+        let count = 0;
+        data.students.forEach(student => {
+          if (!data.attendance[today][student.id]) {
+            data.attendance[today][student.id] = {
+              status: 'absent',
+              time,
+              date: today
+            };
+            count++;
+          }
+        });
+        
+        this.saveData(data);
+        
+        return {
+          success: true,
+          message: `Marked ${count} students as absent`,
+          count
+        };
+      }
+
+      async addStudent(studentData) {
+        const data = this.getData();
+        const newId = `LEH${String(data.students.length + 2024001).padStart(4, '0')}`;
+        const newStudent = {
+          id: newId,
+          name: studentData.name,
+          class: studentData.class || '12A'
+        };
+        
+        data.students.push(newStudent);
+        this.saveData(data);
+        
+        return { success: true, student: newStudent };
+      }
+
+      async resetToday() {
+        const data = this.getData();
+        const today = this.getTodayDate();
+        
+        data.attendance[today] = {};
+        this.saveData(data);
+        
+        return { success: true, message: 'Today\'s attendance reset' };
+      }
+
+      async startNewDay() {
+        const data = this.getData();
+        const today = this.getTodayDate();
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        
+        // Archive yesterday's data
+        if (data.attendance[yesterday]) {
+          if (!data.archived) data.archived = {};
+          data.archived[yesterday] = data.attendance[yesterday];
+        }
+        
+        // Clear today's data
+        data.attendance[today] = {};
+        this.saveData(data);
+        
+        return { 
+          success: true, 
+          message: 'New day started! Yesterday\'s data archived.' 
+        };
+      }
+
+      exportData() {
+        const data = this.getData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `attendance_backup_${this.getTodayDate()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      importData(jsonData) {
+        try {
+          const data = JSON.parse(jsonData);
+          
+          // Validate data structure
+          if (!data.students || !Array.isArray(data.students)) {
+            throw new Error('Invalid data format');
+          }
+          
+          this.saveData(data);
+          return { success: true, message: 'Data imported successfully!' };
+        } catch (error) {
+          return { success: false, message: 'Invalid file format' };
+        }
+      }
+
+      getArchive() {
+        const data = this.getData();
+        return data.archived || {};
+      }
+    }
+
+    // ==================== ATTENDANCE SYSTEM ====================
+    class AttendanceSystem {
+      constructor() {
+        // DOM Elements
+        this.video = document.getElementById('video');
         this.startBtn = document.getElementById('startBtn');
         this.stopBtn = document.getElementById('stopBtn');
         this.verifyBtn = document.getElementById('verifyBtn');
-
+        this.statusText = document.getElementById('statusText');
+        this.verifiedTick = document.getElementById('verifiedTick');
+        this.statusBox = document.getElementById('statusBox');
+        this.studentsList = document.getElementById('studentsList');
+        this.dbStatus = document.getElementById('dbStatus');
+        this.presentCount = document.getElementById('presentCount');
+        this.absentCount = document.getElementById('absentCount');
+        this.unmarkedCount = document.getElementById('unmarkedCount');
+        this.totalCount = document.getElementById('totalCount');
+        this.refreshBtn = document.getElementById('refreshBtn');
+        this.markAllAbsentBtn = document.getElementById('markAllAbsentBtn');
+        this.addStudentBtn = document.getElementById('addStudentBtn');
+        this.autoScanBtn = document.getElementById('autoScanBtn');
+        this.currentDate = document.getElementById('currentDate');
+        this.todayDate = document.getElementById('todayDate');
+        this.exportBtn = document.getElementById('exportBtn');
+        this.importBtn = document.getElementById('importBtn');
+        this.importFile = document.getElementById('importFile');
+        this.resetBtn = document.getElementById('resetBtn');
+        this.newDayBtn = document.getElementById('newDayBtn');
+        
+        // Database Manager
+        this.db = new BrowserDatabase();
+        
+        // State
         this.stream = null;
         this.isVerified = false;
-
+        this.students = [];
+        this.autoScanInterval = null;
+        
+        // Initialize
         this.setupEventListeners();
+        this.showCurrentDate();
+        this.loadStudents();
+      }
+
+      showCurrentDate() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        this.currentDate.textContent = now.toLocaleDateString('en-US', options);
+        this.todayDate.textContent = now.toISOString().split('T')[0];
+      }
+
+      async loadStudents() {
+        try {
+          this.statusText.textContent = "Loading students...";
+          
+          this.students = await this.db.getStudents();
+          this.renderStudents();
+          this.updateSummaryFromDB();
+          
+          this.statusText.textContent = "Ready to scan ID cards";
+        } catch (error) {
+          console.error('Error loading students:', error);
+          this.statusText.textContent = "Error loading students";
+          
+          // Fallback
+          this.students = [
+            { id: 'LEH2024001', name: 'Aarav Sharma', present: false, scanned: false },
+            { id: 'LEH2024002', name: 'Vivaan Patel', present: false, scanned: false }
+          ];
+          this.renderStudents();
+          this.updateSummary();
+        }
+      }
+
+      async updateSummaryFromDB() {
+        try {
+          const data = await this.db.getTodayAttendance();
+          this.presentCount.textContent = data.present;
+          this.absentCount.textContent = data.absent;
+          this.totalCount.textContent = data.total;
+          this.unmarkedCount.textContent = data.unmarked;
+        } catch (error) {
+          console.error('Error loading summary:', error);
+          this.updateSummary();
+        }
+      }
+
+      updateSummary() {
+        const present = this.students.filter(s => s.present).length;
+        const absent = this.students.filter(s => s.scanned && !s.present).length;
+        const total = this.students.length;
+        const unmarked = total - present - absent;
+        
+        this.presentCount.textContent = present;
+        this.absentCount.textContent = absent;
+        this.unmarkedCount.textContent = unmarked;
+        this.totalCount.textContent = total;
+      }
+
+      renderStudents() {
+        this.studentsList.innerHTML = '';
+        
+        this.students.forEach((student) => {
+          const studentElement = document.createElement('div');
+          
+          // Determine class based on status
+          let statusClass = '';
+          let statusText = 'PENDING';
+          let statusCssClass = 'status-pending';
+          
+          if (student.scanned) {
+            if (student.present) {
+              statusClass = 'present';
+              statusText = 'PRESENT';
+              statusCssClass = 'status-present';
+            } else {
+              statusClass = 'absent';
+              statusText = 'ABSENT';
+              statusCssClass = 'status-absent';
+            }
+          }
+          
+          studentElement.className = `student-item ${statusClass}`;
+          
+          const avatarText = student.name.split(' ').map(n => n[0]).join('');
+          
+          studentElement.innerHTML = `
+            <div class="student-info">
+              <div class="student-avatar">${avatarText}</div>
+              <div class="student-details">
+                <div class="student-name">${student.name}</div>
+                <div class="student-id">${student.id}</div>
+                ${student.check_in_time ? `<div class="check-in-time">Checked in: ${student.check_in_time}</div>` : ''}
+              </div>
+            </div>
+            <div class="attendance-controls">
+              <div class="attendance-status ${statusCssClass}">
+                ${statusText}
+              </div>
+              <button class="attendance-btn mark-present" data-id="${student.id}" ${student.present ? 'disabled' : ''}>
+                ${student.present ? '✓ Present' : 'Mark Present'}
+              </button>
+              <button class="attendance-btn mark-absent" data-id="${student.id}" ${!student.present && student.scanned ? 'disabled' : ''}>
+                ${!student.present && student.scanned ? 'Absent' : 'Mark Absent'}
+              </button>
+            </div>
+          `;
+          
+          this.studentsList.appendChild(studentElement);
+        });
+        
+        // Add event listeners
+        document.querySelectorAll('.mark-present').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const studentId = e.target.dataset.id;
+            this.markAttendance(studentId, 'present');
+          });
+        });
+        
+        document.querySelectorAll('.mark-absent').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const studentId = e.target.dataset.id;
+            this.markAttendance(studentId, 'absent');
+          });
+        });
+      }
+
+      async markAttendance(studentId, status) {
+        try {
+          this.showDatabaseStatus(`Marking ${status} for student...`, 'info');
+          
+          const result = await this.db.markAttendance(studentId, status);
+          
+          if (result.success) {
+            // Update local state
+            const studentIndex = this.students.findIndex(s => s.id === studentId);
+            if (studentIndex !== -1) {
+              this.students[studentIndex].present = status === 'present';
+              this.students[studentIndex].scanned = true;
+              this.students[studentIndex].check_in_time = result.time;
+              
+              this.renderStudents();
+              this.updateSummaryFromDB();
+            }
+            
+            this.showDatabaseStatus(result.message, 'success');
+          } else {
+            this.showDatabaseStatus('Failed to mark attendance', 'error');
+          }
+          
+        } catch (error) {
+          console.error('Error marking attendance:', error);
+          this.showDatabaseStatus('Error saving attendance', 'error');
+        }
+      }
+
+      async markAllUnmarkedAsAbsent() {
+        if (!confirm('Are you sure? This will mark ALL unmarked students as ABSENT.')) {
+          return;
+        }
+        
+        try {
+          this.showDatabaseStatus('Marking all unmarked as absent...', 'info');
+          
+          const result = await this.db.bulkMarkAbsent();
+          
+          if (result.success) {
+            await this.loadStudents();
+            await this.updateSummaryFromDB();
+            
+            this.showDatabaseStatus(result.message, 'success');
+          } else {
+            this.showDatabaseStatus('Failed to mark all absent', 'error');
+          }
+          
+        } catch (error) {
+          console.error('Error marking all absent:', error);
+          this.showDatabaseStatus('Error in bulk operation', 'error');
+        }
+      }
+
+      async addNewStudent() {
+        const name = prompt('Enter student name:');
+        if (!name) return;
+        
+        const studentClass = prompt('Enter class (default: 12A):', '12A');
+        
+        try {
+          this.showDatabaseStatus('Adding new student...', 'info');
+          
+          const result = await this.db.addStudent({
+            name: name,
+            class: studentClass || '12A'
+          });
+          
+          if (result.success) {
+            await this.loadStudents();
+            this.showDatabaseStatus(`Student ${result.student.name} added successfully!`, 'success');
+          }
+        } catch (error) {
+          console.error('Error adding student:', error);
+          this.showDatabaseStatus('Error adding student', 'error');
+        }
+      }
+
+      async autoScanDemo() {
+        if (this.autoScanInterval) {
+          clearInterval(this.autoScanInterval);
+          this.autoScanInterval = null;
+          this.autoScanBtn.textContent = '🤖 Auto Scan 5 Students';
+          this.showDatabaseStatus('Auto scan stopped', 'info');
+          return;
+        }
+        
+        this.showDatabaseStatus('Starting auto scan demo...', 'info');
+        this.autoScanBtn.textContent = '⏹️ Stop Auto Scan';
+        
+        let count = 0;
+        const maxScans = 5;
+        
+        this.autoScanInterval = setInterval(async () => {
+          if (count >= maxScans) {
+            clearInterval(this.autoScanInterval);
+            this.autoScanInterval = null;
+            this.autoScanBtn.textContent = '🤖 Auto Scan 5 Students';
+            this.showDatabaseStatus('Auto scan completed!', 'success');
+            return;
+          }
+          
+          // Find unmarked students
+          const unmarkedStudents = this.students.filter(s => !s.scanned);
+          
+          if (unmarkedStudents.length > 0) {
+            // Pick first unmarked student
+            const student = unmarkedStudents[0];
+            
+            // Mark as present
+            await this.markAttendance(student.id, 'present');
+            
+            this.showDatabaseStatus(`Auto scanned: ${student.name}`, 'info');
+            count++;
+          } else {
+            clearInterval(this.autoScanInterval);
+            this.autoScanInterval = null;
+            this.autoScanBtn.textContent = '🤖 Auto Scan 5 Students';
+            this.showDatabaseStatus('All students scanned!', 'success');
+          }
+        }, 2000);
+      }
+
+      async resetTodayAttendance() {
+        if (!confirm('Reset today\'s attendance? This will clear ALL marks for today.')) {
+          return;
+        }
+        
+        try {
+          this.showDatabaseStatus('Resetting today\'s attendance...', 'info');
+          
+          const result = await this.db.resetToday();
+          
+          if (result.success) {
+            await this.loadStudents();
+            await this.updateSummaryFromDB();
+            
+            this.showDatabaseStatus(result.message, 'success');
+          }
+        } catch (error) {
+          console.error('Error resetting attendance:', error);
+          this.showDatabaseStatus('Error resetting attendance', 'error');
+        }
+      }
+
+      async startNewDay() {
+        if (!confirm('Start new day? Yesterday\'s data will be archived.')) {
+          return;
+        }
+        
+        try {
+          this.showDatabaseStatus('Starting new day...', 'info');
+          
+          const result = await this.db.startNewDay();
+          
+          if (result.success) {
+            await this.loadStudents();
+            await this.updateSummaryFromDB();
+            this.showCurrentDate();
+            
+            this.showDatabaseStatus(result.message, 'success');
+          }
+        } catch (error) {
+          console.error('Error starting new day:', error);
+          this.showDatabaseStatus('Error starting new day', 'error');
+        }
+      }
+
+      exportData() {
+        try {
+          this.db.exportData();
+          this.showDatabaseStatus('Data exported successfully!', 'success');
+        } catch (error) {
+          console.error('Error exporting data:', error);
+          this.showDatabaseStatus('Error exporting data', 'error');
+        }
+      }
+
+      importData() {
+        this.importFile.click();
+      }
+
+      handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            this.showDatabaseStatus('Importing data...', 'info');
+            const result = this.db.importData(e.target.result);
+            
+            if (result.success) {
+              await this.loadStudents();
+              await this.updateSummaryFromDB();
+              this.showDatabaseStatus(result.message, 'success');
+            } else {
+              this.showDatabaseStatus(result.message, 'error');
+            }
+          } catch (error) {
+            console.error('Error importing data:', error);
+            this.showDatabaseStatus('Error importing data', 'error');
+          }
+        };
+        reader.readAsText(file);
+        
+        // Reset file input
+        event.target.value = '';
+      }
+
+      showDatabaseStatus(message, type = 'info') {
+        const colors = {
+          info: '#e7f3ff',
+          success: '#d4edda',
+          error: '#f8d7da'
+        };
+        
+        const textColors = {
+          info: '#004085',
+          success: '#155724',
+          error: '#721c24'
+        };
+        
+        this.dbStatus.textContent = message;
+        this.dbStatus.style.background = colors[type];
+        this.dbStatus.style.color = textColors[type];
+        this.dbStatus.className = "database-status show";
+        
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+          this.dbStatus.className = "database-status";
+        }, 5000);
       }
 
       setupEventListeners() {
         this.startBtn.addEventListener('click', () => this.startCamera());
         this.stopBtn.addEventListener('click', () => this.stopCamera());
         this.verifyBtn.addEventListener('click', () => this.verifyStudent());
+        this.refreshBtn.addEventListener('click', () => this.loadStudents());
+        this.markAllAbsentBtn.addEventListener('click', () => this.markAllUnmarkedAsAbsent());
+        this.addStudentBtn.addEventListener('click', () => this.addNewStudent());
+        this.autoScanBtn.addEventListener('click', () => this.autoScanDemo());
+        this.exportBtn.addEventListener('click', () => this.exportData());
+        this.importBtn.addEventListener('click', () => this.importData());
+        this.importFile.addEventListener('change', (e) => this.handleImportFile(e));
+        this.resetBtn.addEventListener('click', () => this.resetTodayAttendance());
+        this.newDayBtn.addEventListener('click', () => this.startNewDay());
 
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-          if (e.code === 'Space' && this.stream && !this.isVerified) {
+          // SPACE to verify
+          if (e.code === 'Space' && this.stream && !this.isVerified && !this.autoScanInterval) {
             e.preventDefault();
             this.verifyStudent();
+          }
+          
+          // CTRL+S to save/export
+          if (e.ctrlKey && e.code === 'KeyS') {
+            e.preventDefault();
+            this.exportData();
+          }
+          
+          // CTRL+R to refresh
+          if (e.ctrlKey && e.code === 'KeyR') {
+            e.preventDefault();
+            this.loadStudents();
           }
         });
       }
@@ -416,7 +1333,7 @@
             this.startBtn.disabled = true;
             this.stopBtn.disabled = false;
             this.verifyBtn.disabled = false;
-            this.statusText.textContent = "Front camera ready! Show ID Card and click VERIFY NOW";
+            this.statusText.textContent = "Camera ready! Show ID Card and click SCAN";
           };
 
         } catch (error) {
@@ -441,22 +1358,46 @@
         this.startBtn.disabled = false;
         this.stopBtn.disabled = true;
         this.verifyBtn.disabled = true;
-        this.statusText.textContent = "Camera stopped";
+        this.statusText.textContent = "Camera stopped. Click START to begin again.";
         this.hideVerified();
       }
 
       verifyStudent() {
         if (this.isVerified) return;
+        
         this.isVerified = true;
         this.verifyBtn.disabled = true;
-        this.statusText.textContent = "✅ VERIFIED! Student attendance recorded";
-        this.statusBox.classList.add('verified');
-        this.verifiedTick.classList.add('show');
         
-        // Auto reset after 4 seconds
-        setTimeout(() => {
-          this.resetForNextStudent();
-        }, 4000);
+        // Simulate ID card scanning
+        this.statusText.textContent = "🔍 Scanning ID Card...";
+        
+        setTimeout(async () => {
+          // Find unmarked students
+          const unmarkedStudents = this.students.filter(s => !s.scanned);
+          
+          if (unmarkedStudents.length > 0) {
+            // Pick a random unmarked student
+            const randomIndex = Math.floor(Math.random() * unmarkedStudents.length);
+            const student = unmarkedStudents[randomIndex];
+            
+            // Mark as present in database
+            await this.markAttendance(student.id, 'present');
+            
+            this.statusText.textContent = `✅ VERIFIED! ${student.name}`;
+            this.statusBox.classList.add('verified');
+            this.verifiedTick.classList.add('show');
+            
+            // Reset for next student after 3 seconds
+            setTimeout(() => {
+              this.resetForNextStudent();
+            }, 3000);
+          } else {
+            this.statusText.textContent = "All students have been marked!";
+            setTimeout(() => {
+              this.resetForNextStudent();
+            }, 2000);
+          }
+        }, 1500);
       }
       
       resetForNextStudent() {
@@ -464,7 +1405,7 @@
         this.verifyBtn.disabled = false;
         
         this.hideVerified();
-        this.statusText.textContent = "Ready for next student. Show ID Card and click VERIFY NOW";
+        this.statusText.textContent = "Ready for next student. Show ID Card and click SCAN";
         this.statusBox.classList.remove('verified');
       }
       
@@ -473,9 +1414,16 @@
       }
     }
 
-    // Initialize scanner when page loads
+    // Initialize system when page loads
     document.addEventListener('DOMContentLoaded', () => {
-      new LEHScanner();
+      new AttendanceSystem();
+    });
+
+    // Save data before page closes
+    window.addEventListener('beforeunload', (e) => {
+      // Optional: Add confirmation if there's unsaved data
+      // e.preventDefault();
+      // e.returnValue = '';
     });
   </script>
 </body>
