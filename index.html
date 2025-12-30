@@ -184,6 +184,22 @@
       font-weight: bold;
     }
 
+    .selected-student-notice {
+      background: #ffc107;
+      color: #856404;
+      padding: 8px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 14px;
+      display: none;
+    }
+
+    .selected-student-notice.show {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
     .students-list {
       flex: 1;
       background: #f8f9fa;
@@ -204,6 +220,12 @@
       border-radius: 8px;
       border: 1px solid #e0e0e0;
       transition: all 0.3s;
+    }
+
+    .student-item.selected {
+      background: #e3f2fd;
+      border: 2px solid #2196F3;
+      transform: translateX(5px);
     }
 
     .student-item.present {
@@ -547,21 +569,21 @@
   <div class="container">
     <div class="header">
       <h1>LEH STUDENT ATTENDANCE SYSTEM</h1>
-      <div class="logo">
-        <!-- <div class="logo-main">LEH</div>
-        <div class="logo-sub">LEARNING EDUCATION HUB</div> -->
-      </div>
+      <!-- <div class="logo">
+        <div class="logo-main">LEH</div>
+        <div class="logo-sub">LEARNING EDUCATION HUB</div>
+      </div> -->
       <div id="currentDate" class="date-info"></div>
-      <div class="date-info">Data saves to browser storage - Works 100% offline!</div>
+      <!-- <div class="date-info">Data saves to browser storage - Works 100% offline!</div> -->
     </div>
 
-    <!-- <div class="instructions">
-      <strong>COMPLETE OFFLINE SYSTEM - NO SERVER NEEDED!</strong><br>
-      1. All data saves in your browser<br>
-      2. Export/Import data anytime<br>
-      3. Only marks PRESENT when scanned/manually marked<br>
-      4. Others remain UNMARKED (NOT absent)
-    </div> -->
+  <!-- <div class="instructions">
+      <strong>INSTRUCTIONS:</strong><br>
+      1. Select student from list (click Mark Present)<br>
+      2. Click START CAMERA and show ID card<br>
+      3. Click VERIFY NOW to record attendance<br>
+      4. Only selected student's attendance will be marked
+    </div>   -->
 
     <div class="config-section">
       <div class="config-label">📅 Today's Date: <span id="todayDate"></span></div>
@@ -590,13 +612,30 @@
         </div>
       </div>
 
+      <div class="verify-section">
+      <button id="verifyBtn" class="verify-btn" disabled>
+        <span>📷</span> VERIFY SELECTED STUDENT 
+      </button>
+
+      <div class="status-container">
+        <div class="status-box" id="statusBox">
+          <div id="statusText">Select a student first, then start camera</div>
+          <div id="verifiedTick" class="verified-tick">✅</div>
+        </div>
+      </div>
+
       <div class="students-section">
         <div class="section-title">
-          STUDENTS LIST - CLASS 12A
+          STUDENTS LIST - LEH
           <div style="font-size: 12px; font-weight: normal; margin-top: 5px;">
-            Click buttons to mark Present/Absent
+            Click "Mark Present" to select student for verification
           </div>
         </div>
+
+        <div class="selected-student-notice" id="selectedNotice">
+          Selected: <span id="selectedStudentName"></span> - Ready for verification!
+        </div>
+
         <div class="students-list" id="studentsList">
           <!-- Student list will be populated by JavaScript -->
         </div>
@@ -604,15 +643,11 @@
           <button id="refreshBtn" class="admin-btn">🔄 Refresh List</button>
           <button id="addStudentBtn" class="admin-btn">➕ Add Student</button>
           <button id="markAllAbsentBtn" class="admin-btn">⚠️ Mark All Unmarked as Absent</button>
-          <button id="autoScanBtn" class="admin-btn" style="background: #ffc107; color: #000;">🤖 Auto Scan 5 Students</button>
         </div>
       </div>
     </div>
 
-    <div class="verify-section">
-      <button id="verifyBtn" class="verify-btn" disabled>
-        <span>📷</span> SCAN ID CARD (Press SPACE)
-      </button>
+    
 
       <div class="attendance-summary">
         <div class="summary-item">
@@ -632,13 +667,6 @@
           <div>Total</div>
         </div>
       </div>
-    </div>
-
-    <div class="status-container">
-      <div class="status-box" id="statusBox">
-        <div id="statusText">Click START CAMERA to begin scanning ID cards</div>
-        <div id="verifiedTick" class="verified-tick">✅</div>
-      </div>
       
       <div class="database-status" id="dbStatus">
         Data saved to browser storage!
@@ -647,239 +675,6 @@
   </div>
 
   <script>
-    // ==================== DATABASE SYSTEM (Browser Storage) ====================
-    class BrowserDatabase {
-      constructor() {
-        this.storageKey = 'leh_attendance_system_v2';
-        this.initDatabase();
-      }
-
-      initDatabase() {
-        if (!localStorage.getItem(this.storageKey)) {
-          // Initial sample data
-          const initialData = {
-            students: [
-              { id: 'LEH2024001', name: 'Aarav Sharma', class: '12A' },
-              { id: 'LEH2024002', name: 'Vivaan Patel', class: '12A' },
-              { id: 'LEH2024003', name: 'Aditya Singh', class: '12A' },
-              { id: 'LEH2024004', name: 'Vihaan Kumar', class: '12A' },
-              { id: 'LEH2024005', name: 'Arjun Gupta', class: '12A' },
-              { id: 'LEH2024006', name: 'Sai Reddy', class: '12A' },
-              { id: 'LEH2024007', name: 'Reyansh Joshi', class: '12A' },
-              { id: 'LEH2024008', name: 'Mohammed Khan', class: '12A' },
-              { id: 'LEH2024009', name: 'Ishaan Verma', class: '12A' },
-              { id: 'LEH2024010', name: 'Kabir Malhotra', class: '12A' }
-            ],
-            attendance: {},
-            lastUpdated: new Date().toISOString()
-          };
-          
-          this.saveData(initialData);
-        }
-      }
-
-      getData() {
-        const data = localStorage.getItem(this.storageKey);
-        return data ? JSON.parse(data) : null;
-      }
-
-      saveData(data) {
-        data.lastUpdated = new Date().toISOString();
-        localStorage.setItem(this.storageKey, JSON.stringify(data));
-      }
-
-      getTodayDate() {
-        return new Date().toISOString().split('T')[0];
-      }
-
-      async getStudents() {
-        const data = this.getData();
-        const today = this.getTodayDate();
-        
-        // Initialize today's attendance if not exists
-        if (!data.attendance[today]) {
-          data.attendance[today] = {};
-          this.saveData(data);
-        }
-
-        const studentsWithAttendance = data.students.map(student => {
-          const attendanceRecord = data.attendance[today][student.id];
-          
-          return {
-            ...student,
-            present: attendanceRecord ? attendanceRecord.status === 'present' : false,
-            scanned: !!attendanceRecord,
-            check_in_time: attendanceRecord ? attendanceRecord.time : null
-          };
-        });
-
-        return studentsWithAttendance;
-      }
-
-      async markAttendance(studentId, status) {
-        const data = this.getData();
-        const today = this.getTodayDate();
-        const time = new Date().toTimeString().split(' ')[0];
-        
-        // Initialize today's attendance if not exists
-        if (!data.attendance[today]) {
-          data.attendance[today] = {};
-        }
-        
-        // Save attendance
-        data.attendance[today][studentId] = {
-          status,
-          time,
-          date: today
-        };
-        
-        this.saveData(data);
-        
-        return {
-          success: true,
-          message: `Attendance marked ${status} for student ${studentId}`,
-          time
-        };
-      }
-
-      async getTodayAttendance() {
-        const data = this.getData();
-        const today = this.getTodayDate();
-        
-        if (!data.attendance[today]) {
-          data.attendance[today] = {};
-          this.saveData(data);
-        }
-        
-        const total = data.students.length;
-        let present = 0;
-        let absent = 0;
-        
-        Object.values(data.attendance[today]).forEach(record => {
-          if (record.status === 'present') present++;
-          if (record.status === 'absent') absent++;
-        });
-        
-        return {
-          date: today,
-          total,
-          present,
-          absent,
-          unmarked: total - present - absent
-        };
-      }
-
-      async bulkMarkAbsent() {
-        const data = this.getData();
-        const today = this.getTodayDate();
-        const time = '00:00:00';
-        
-        if (!data.attendance[today]) {
-          data.attendance[today] = {};
-        }
-        
-        let count = 0;
-        data.students.forEach(student => {
-          if (!data.attendance[today][student.id]) {
-            data.attendance[today][student.id] = {
-              status: 'absent',
-              time,
-              date: today
-            };
-            count++;
-          }
-        });
-        
-        this.saveData(data);
-        
-        return {
-          success: true,
-          message: `Marked ${count} students as absent`,
-          count
-        };
-      }
-
-      async addStudent(studentData) {
-        const data = this.getData();
-        const newId = `LEH${String(data.students.length + 2024001).padStart(4, '0')}`;
-        const newStudent = {
-          id: newId,
-          name: studentData.name,
-          class: studentData.class || '12A'
-        };
-        
-        data.students.push(newStudent);
-        this.saveData(data);
-        
-        return { success: true, student: newStudent };
-      }
-
-      async resetToday() {
-        const data = this.getData();
-        const today = this.getTodayDate();
-        
-        data.attendance[today] = {};
-        this.saveData(data);
-        
-        return { success: true, message: 'Today\'s attendance reset' };
-      }
-
-      async startNewDay() {
-        const data = this.getData();
-        const today = this.getTodayDate();
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-        
-        // Archive yesterday's data
-        if (data.attendance[yesterday]) {
-          if (!data.archived) data.archived = {};
-          data.archived[yesterday] = data.attendance[yesterday];
-        }
-        
-        // Clear today's data
-        data.attendance[today] = {};
-        this.saveData(data);
-        
-        return { 
-          success: true, 
-          message: 'New day started! Yesterday\'s data archived.' 
-        };
-      }
-
-      exportData() {
-        const data = this.getData();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `attendance_backup_${this.getTodayDate()}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
-      importData(jsonData) {
-        try {
-          const data = JSON.parse(jsonData);
-          
-          // Validate data structure
-          if (!data.students || !Array.isArray(data.students)) {
-            throw new Error('Invalid data format');
-          }
-          
-          this.saveData(data);
-          return { success: true, message: 'Data imported successfully!' };
-        } catch (error) {
-          return { success: false, message: 'Invalid file format' };
-        }
-      }
-
-      getArchive() {
-        const data = this.getData();
-        return data.archived || {};
-      }
-    }
-
     // ==================== ATTENDANCE SYSTEM ====================
     class AttendanceSystem {
       constructor() {
@@ -900,7 +695,6 @@
         this.refreshBtn = document.getElementById('refreshBtn');
         this.markAllAbsentBtn = document.getElementById('markAllAbsentBtn');
         this.addStudentBtn = document.getElementById('addStudentBtn');
-        this.autoScanBtn = document.getElementById('autoScanBtn');
         this.currentDate = document.getElementById('currentDate');
         this.todayDate = document.getElementById('todayDate');
         this.exportBtn = document.getElementById('exportBtn');
@@ -908,20 +702,60 @@
         this.importFile = document.getElementById('importFile');
         this.resetBtn = document.getElementById('resetBtn');
         this.newDayBtn = document.getElementById('newDayBtn');
-        
-        // Database Manager
-        this.db = new BrowserDatabase();
+        this.selectedNotice = document.getElementById('selectedNotice');
+        this.selectedStudentName = document.getElementById('selectedStudentName');
         
         // State
         this.stream = null;
         this.isVerified = false;
         this.students = [];
-        this.autoScanInterval = null;
+        this.selectedStudentId = null;
+        this.database = this.initDatabase();
         
         // Initialize
         this.setupEventListeners();
         this.showCurrentDate();
         this.loadStudents();
+      }
+
+      // Simple localStorage database
+      initDatabase() {
+        const storageKey = 'leh_attendance_v3';
+        
+        return {
+          getStudents: () => {
+            const data = localStorage.getItem(storageKey);
+            if (!data) {
+              // Default students
+              const defaultStudents = [
+                { id: 'LEH2024001', name: 'Aarav Sharma', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024002', name: 'Vivaan Patel', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024003', name: 'Aditya Singh', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024004', name: 'Vihaan Kumar', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024005', name: 'Arjun Gupta', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024006', name: 'Sai Reddy', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024007', name: 'Reyansh Joshi', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024008', name: 'Mohammed Khan', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024009', name: 'Ishaan Verma', class: '12A', present: false, scanned: false },
+                { id: 'LEH2024010', name: 'Kabir Malhotra', class: '12A', present: false, scanned: false }
+              ];
+              localStorage.setItem(storageKey, JSON.stringify(defaultStudents));
+              return defaultStudents;
+            }
+            return JSON.parse(data);
+          },
+          
+          saveStudents: (students) => {
+            localStorage.setItem(storageKey, JSON.stringify(students));
+          },
+          
+          addStudent: (student) => {
+            const students = this.database.getStudents();
+            students.push(student);
+            this.database.saveStudents(students);
+            return student;
+          }
+        };
       }
 
       showCurrentDate() {
@@ -931,39 +765,15 @@
         this.todayDate.textContent = now.toISOString().split('T')[0];
       }
 
-      async loadStudents() {
+      loadStudents() {
         try {
-          this.statusText.textContent = "Loading students...";
-          
-          this.students = await this.db.getStudents();
+          this.students = this.database.getStudents();
           this.renderStudents();
-          this.updateSummaryFromDB();
-          
-          this.statusText.textContent = "Ready to scan ID cards";
+          this.updateSummary();
+          this.statusText.textContent = "Select a student from the list";
         } catch (error) {
           console.error('Error loading students:', error);
           this.statusText.textContent = "Error loading students";
-          
-          // Fallback
-          this.students = [
-            { id: 'LEH2024001', name: 'Aarav Sharma', present: false, scanned: false },
-            { id: 'LEH2024002', name: 'Vivaan Patel', present: false, scanned: false }
-          ];
-          this.renderStudents();
-          this.updateSummary();
-        }
-      }
-
-      async updateSummaryFromDB() {
-        try {
-          const data = await this.db.getTodayAttendance();
-          this.presentCount.textContent = data.present;
-          this.absentCount.textContent = data.absent;
-          this.totalCount.textContent = data.total;
-          this.unmarkedCount.textContent = data.unmarked;
-        } catch (error) {
-          console.error('Error loading summary:', error);
-          this.updateSummary();
         }
       }
 
@@ -1002,7 +812,11 @@
             }
           }
           
-          studentElement.className = `student-item ${statusClass}`;
+          // Add selected class if this is the selected student
+          const isSelected = student.id === this.selectedStudentId;
+          const selectedClass = isSelected ? 'selected' : '';
+          
+          studentElement.className = `student-item ${statusClass} ${selectedClass}`;
           
           const avatarText = student.name.split(' ').map(n => n[0]).join('');
           
@@ -1031,254 +845,92 @@
           this.studentsList.appendChild(studentElement);
         });
         
-        // Add event listeners
+        // Add event listeners for Present buttons
         document.querySelectorAll('.mark-present').forEach(btn => {
           btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const studentId = e.target.dataset.id;
-            this.markAttendance(studentId, 'present');
+            this.selectStudent(studentId);
           });
         });
         
+        // Add event listeners for Absent buttons
         document.querySelectorAll('.mark-absent').forEach(btn => {
           btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             const studentId = e.target.dataset.id;
-            this.markAttendance(studentId, 'absent');
+            this.markAbsent(studentId);
+          });
+        });
+        
+        // Add click event to select student
+        document.querySelectorAll('.student-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('attendance-btn')) {
+              const studentId = item.querySelector('.mark-present').dataset.id;
+              this.selectStudent(studentId);
+            }
           });
         });
       }
 
-      async markAttendance(studentId, status) {
-        try {
-          this.showDatabaseStatus(`Marking ${status} for student...`, 'info');
-          
-          const result = await this.db.markAttendance(studentId, status);
-          
-          if (result.success) {
-            // Update local state
-            const studentIndex = this.students.findIndex(s => s.id === studentId);
-            if (studentIndex !== -1) {
-              this.students[studentIndex].present = status === 'present';
-              this.students[studentIndex].scanned = true;
-              this.students[studentIndex].check_in_time = result.time;
-              
-              this.renderStudents();
-              this.updateSummaryFromDB();
-            }
-            
-            this.showDatabaseStatus(result.message, 'success');
-          } else {
-            this.showDatabaseStatus('Failed to mark attendance', 'error');
-          }
-          
-        } catch (error) {
-          console.error('Error marking attendance:', error);
-          this.showDatabaseStatus('Error saving attendance', 'error');
+      selectStudent(studentId) {
+        // Find the student
+        const student = this.students.find(s => s.id === studentId);
+        if (!student) return;
+        
+        // Set as selected
+        this.selectedStudentId = studentId;
+        
+        // Update notice
+        this.selectedStudentName.textContent = student.name;
+        this.selectedNotice.classList.add('show');
+        
+        // Update status message
+        this.statusText.textContent = `Selected: ${student.name}. Now start camera and verify.`;
+        
+        // Enable verify button if camera is ready
+        if (this.stream) {
+          this.verifyBtn.disabled = false;
         }
+        
+        // Re-render to show selection
+        this.renderStudents();
+        
+        // Show database status
+        this.showDatabaseStatus(`Selected ${student.name} for verification`, 'info');
       }
 
-      async markAllUnmarkedAsAbsent() {
-        if (!confirm('Are you sure? This will mark ALL unmarked students as ABSENT.')) {
-          return;
+      markAbsent(studentId) {
+        const student = this.students.find(s => s.id === studentId);
+        if (!student) return;
+        
+        // Mark as absent
+        student.scanned = true;
+        student.present = false;
+        student.check_in_time = new Date().toTimeString().split(' ')[0];
+        
+        // Save to database
+        this.database.saveStudents(this.students);
+        
+        // Update UI
+        this.renderStudents();
+        this.updateSummary();
+        
+        // If this was the selected student, clear selection
+        if (this.selectedStudentId === studentId) {
+          this.clearSelection();
         }
         
-        try {
-          this.showDatabaseStatus('Marking all unmarked as absent...', 'info');
-          
-          const result = await this.db.bulkMarkAbsent();
-          
-          if (result.success) {
-            await this.loadStudents();
-            await this.updateSummaryFromDB();
-            
-            this.showDatabaseStatus(result.message, 'success');
-          } else {
-            this.showDatabaseStatus('Failed to mark all absent', 'error');
-          }
-          
-        } catch (error) {
-          console.error('Error marking all absent:', error);
-          this.showDatabaseStatus('Error in bulk operation', 'error');
-        }
+        this.showDatabaseStatus(`${student.name} marked absent`, 'info');
       }
 
-      async addNewStudent() {
-        const name = prompt('Enter student name:');
-        if (!name) return;
-        
-        const studentClass = prompt('Enter class (default: 12A):', '12A');
-        
-        try {
-          this.showDatabaseStatus('Adding new student...', 'info');
-          
-          const result = await this.db.addStudent({
-            name: name,
-            class: studentClass || '12A'
-          });
-          
-          if (result.success) {
-            await this.loadStudents();
-            this.showDatabaseStatus(`Student ${result.student.name} added successfully!`, 'success');
-          }
-        } catch (error) {
-          console.error('Error adding student:', error);
-          this.showDatabaseStatus('Error adding student', 'error');
-        }
-      }
-
-      async autoScanDemo() {
-        if (this.autoScanInterval) {
-          clearInterval(this.autoScanInterval);
-          this.autoScanInterval = null;
-          this.autoScanBtn.textContent = '🤖 Auto Scan 5 Students';
-          this.showDatabaseStatus('Auto scan stopped', 'info');
-          return;
-        }
-        
-        this.showDatabaseStatus('Starting auto scan demo...', 'info');
-        this.autoScanBtn.textContent = '⏹️ Stop Auto Scan';
-        
-        let count = 0;
-        const maxScans = 5;
-        
-        this.autoScanInterval = setInterval(async () => {
-          if (count >= maxScans) {
-            clearInterval(this.autoScanInterval);
-            this.autoScanInterval = null;
-            this.autoScanBtn.textContent = '🤖 Auto Scan 5 Students';
-            this.showDatabaseStatus('Auto scan completed!', 'success');
-            return;
-          }
-          
-          // Find unmarked students
-          const unmarkedStudents = this.students.filter(s => !s.scanned);
-          
-          if (unmarkedStudents.length > 0) {
-            // Pick first unmarked student
-            const student = unmarkedStudents[0];
-            
-            // Mark as present
-            await this.markAttendance(student.id, 'present');
-            
-            this.showDatabaseStatus(`Auto scanned: ${student.name}`, 'info');
-            count++;
-          } else {
-            clearInterval(this.autoScanInterval);
-            this.autoScanInterval = null;
-            this.autoScanBtn.textContent = '🤖 Auto Scan 5 Students';
-            this.showDatabaseStatus('All students scanned!', 'success');
-          }
-        }, 2000);
-      }
-
-      async resetTodayAttendance() {
-        if (!confirm('Reset today\'s attendance? This will clear ALL marks for today.')) {
-          return;
-        }
-        
-        try {
-          this.showDatabaseStatus('Resetting today\'s attendance...', 'info');
-          
-          const result = await this.db.resetToday();
-          
-          if (result.success) {
-            await this.loadStudents();
-            await this.updateSummaryFromDB();
-            
-            this.showDatabaseStatus(result.message, 'success');
-          }
-        } catch (error) {
-          console.error('Error resetting attendance:', error);
-          this.showDatabaseStatus('Error resetting attendance', 'error');
-        }
-      }
-
-      async startNewDay() {
-        if (!confirm('Start new day? Yesterday\'s data will be archived.')) {
-          return;
-        }
-        
-        try {
-          this.showDatabaseStatus('Starting new day...', 'info');
-          
-          const result = await this.db.startNewDay();
-          
-          if (result.success) {
-            await this.loadStudents();
-            await this.updateSummaryFromDB();
-            this.showCurrentDate();
-            
-            this.showDatabaseStatus(result.message, 'success');
-          }
-        } catch (error) {
-          console.error('Error starting new day:', error);
-          this.showDatabaseStatus('Error starting new day', 'error');
-        }
-      }
-
-      exportData() {
-        try {
-          this.db.exportData();
-          this.showDatabaseStatus('Data exported successfully!', 'success');
-        } catch (error) {
-          console.error('Error exporting data:', error);
-          this.showDatabaseStatus('Error exporting data', 'error');
-        }
-      }
-
-      importData() {
-        this.importFile.click();
-      }
-
-      handleImportFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          try {
-            this.showDatabaseStatus('Importing data...', 'info');
-            const result = this.db.importData(e.target.result);
-            
-            if (result.success) {
-              await this.loadStudents();
-              await this.updateSummaryFromDB();
-              this.showDatabaseStatus(result.message, 'success');
-            } else {
-              this.showDatabaseStatus(result.message, 'error');
-            }
-          } catch (error) {
-            console.error('Error importing data:', error);
-            this.showDatabaseStatus('Error importing data', 'error');
-          }
-        };
-        reader.readAsText(file);
-        
-        // Reset file input
-        event.target.value = '';
-      }
-
-      showDatabaseStatus(message, type = 'info') {
-        const colors = {
-          info: '#e7f3ff',
-          success: '#d4edda',
-          error: '#f8d7da'
-        };
-        
-        const textColors = {
-          info: '#004085',
-          success: '#155724',
-          error: '#721c24'
-        };
-        
-        this.dbStatus.textContent = message;
-        this.dbStatus.style.background = colors[type];
-        this.dbStatus.style.color = textColors[type];
-        this.dbStatus.className = "database-status show";
-        
-        // Auto hide after 5 seconds
-        setTimeout(() => {
-          this.dbStatus.className = "database-status";
-        }, 5000);
+      clearSelection() {
+        this.selectedStudentId = null;
+        this.selectedNotice.classList.remove('show');
+        this.verifyBtn.disabled = true;
+        this.statusText.textContent = "Select a student from the list";
+        this.renderStudents();
       }
 
       setupEventListeners() {
@@ -1288,7 +940,6 @@
         this.refreshBtn.addEventListener('click', () => this.loadStudents());
         this.markAllAbsentBtn.addEventListener('click', () => this.markAllUnmarkedAsAbsent());
         this.addStudentBtn.addEventListener('click', () => this.addNewStudent());
-        this.autoScanBtn.addEventListener('click', () => this.autoScanDemo());
         this.exportBtn.addEventListener('click', () => this.exportData());
         this.importBtn.addEventListener('click', () => this.importData());
         this.importFile.addEventListener('change', (e) => this.handleImportFile(e));
@@ -1297,27 +948,20 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-          // SPACE to verify
-          if (e.code === 'Space' && this.stream && !this.isVerified && !this.autoScanInterval) {
+          // SPACE to verify (only if student is selected and camera is on)
+          if (e.code === 'Space' && this.stream && !this.isVerified && this.selectedStudentId) {
             e.preventDefault();
             this.verifyStudent();
-          }
-          
-          // CTRL+S to save/export
-          if (e.ctrlKey && e.code === 'KeyS') {
-            e.preventDefault();
-            this.exportData();
-          }
-          
-          // CTRL+R to refresh
-          if (e.ctrlKey && e.code === 'KeyR') {
-            e.preventDefault();
-            this.loadStudents();
           }
         });
       }
 
       async startCamera() {
+        if (!this.selectedStudentId) {
+          this.statusText.textContent = "Please select a student first";
+          return;
+        }
+
         try {
           this.stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -1333,7 +977,8 @@
             this.startBtn.disabled = true;
             this.stopBtn.disabled = false;
             this.verifyBtn.disabled = false;
-            this.statusText.textContent = "Camera ready! Show ID Card and click SCAN";
+            const student = this.students.find(s => s.id === this.selectedStudentId);
+            this.statusText.textContent = `Camera ready! Verify ID for ${student.name}`;
           };
 
         } catch (error) {
@@ -1358,72 +1003,241 @@
         this.startBtn.disabled = false;
         this.stopBtn.disabled = true;
         this.verifyBtn.disabled = true;
-        this.statusText.textContent = "Camera stopped. Click START to begin again.";
+        this.statusText.textContent = "Camera stopped";
         this.hideVerified();
       }
 
       verifyStudent() {
-        if (this.isVerified) return;
+        if (this.isVerified || !this.selectedStudentId || !this.stream) return;
+        
+        const student = this.students.find(s => s.id === this.selectedStudentId);
+        if (!student) {
+          this.statusText.textContent = "Student not found";
+          return;
+        }
         
         this.isVerified = true;
         this.verifyBtn.disabled = true;
         
         // Simulate ID card scanning
-        this.statusText.textContent = "🔍 Scanning ID Card...";
+        this.statusText.textContent = `🔍 Scanning ID Card for ${student.name}...`;
         
-        setTimeout(async () => {
-          // Find unmarked students
-          const unmarkedStudents = this.students.filter(s => !s.scanned);
+        setTimeout(() => {
+          // Mark as present
+          student.scanned = true;
+          student.present = true;
+          student.check_in_time = new Date().toTimeString().split(' ')[0];
           
-          if (unmarkedStudents.length > 0) {
-            // Pick a random unmarked student
-            const randomIndex = Math.floor(Math.random() * unmarkedStudents.length);
-            const student = unmarkedStudents[randomIndex];
-            
-            // Mark as present in database
-            await this.markAttendance(student.id, 'present');
-            
-            this.statusText.textContent = `✅ VERIFIED! ${student.name}`;
-            this.statusBox.classList.add('verified');
-            this.verifiedTick.classList.add('show');
-            
-            // Reset for next student after 3 seconds
-            setTimeout(() => {
-              this.resetForNextStudent();
-            }, 3000);
-          } else {
-            this.statusText.textContent = "All students have been marked!";
-            setTimeout(() => {
-              this.resetForNextStudent();
-            }, 2000);
-          }
+          // Save to database
+          this.database.saveStudents(this.students);
+          
+          // Update UI
+          this.renderStudents();
+          this.updateSummary();
+          
+          // Show success message
+          this.statusText.textContent = `✅ VERIFIED! ${student.name}`;
+          this.statusBox.classList.add('verified');
+          this.verifiedTick.classList.add('show');
+          
+          this.showDatabaseStatus(`${student.name} attendance recorded`, 'success');
+          
+          // Clear selection and reset for next student
+          setTimeout(() => {
+            this.clearSelection();
+            this.resetForNextStudent();
+          }, 3000);
         }, 1500);
       }
       
       resetForNextStudent() {
         this.isVerified = false;
-        this.verifyBtn.disabled = false;
-        
-        this.hideVerified();
-        this.statusText.textContent = "Ready for next student. Show ID Card and click SCAN";
+        this.stopCamera();
+        this.statusText.textContent = "Select another student to continue";
         this.statusBox.classList.remove('verified');
       }
       
       hideVerified() {
         this.verifiedTick.classList.remove('show');
       }
+
+      // Other methods (addNewStudent, markAllUnmarkedAsAbsent, etc.)
+      markAllUnmarkedAsAbsent() {
+        if (!confirm('Are you sure? This will mark ALL unmarked students as ABSENT.')) {
+          return;
+        }
+        
+        let count = 0;
+        this.students.forEach(student => {
+          if (!student.scanned) {
+            student.scanned = true;
+            student.present = false;
+            student.check_in_time = '00:00:00';
+            count++;
+          }
+        });
+        
+        this.database.saveStudents(this.students);
+        this.renderStudents();
+        this.updateSummary();
+        this.clearSelection();
+        
+        this.showDatabaseStatus(`Marked ${count} students as absent`, 'info');
+      }
+
+     addNewStudent() {
+  const name = prompt('Enter student name:');
+  if (!name) return;
+  
+  const id = prompt('Enter student ID (e.g., LEH2024001):');
+  if (!id) return;
+  
+  const course = prompt('Enter course (e.g., BCA, BBA, B.Tech):');
+  if (!course) return;
+  
+  const newStudent = {
+    id: id,
+    name: name,
+    course: course,
+    present: false,
+    scanned: false
+  };
+  
+  // Check if ID already exists
+  const existingStudent = this.students.find(s => s.id === id);
+  if (existingStudent) {
+    this.showDatabaseStatus(`Student ID ${id} already exists!`, 'error');
+    return;
+  }
+  
+
+        
+        this.students.push(newStudent);
+        this.database.saveStudents(this.students);
+        this.renderStudents();
+        this.updateSummary();
+        
+        this.showDatabaseStatus(`Student ${name} added successfully!`, 'success');
+      }
+
+      exportData() {
+        const data = {
+          students: this.students,
+          exportedAt: new Date().toISOString()
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `attendance_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showDatabaseStatus('Data exported successfully!', 'success');
+      }
+
+      importData() {
+        this.importFile.click();
+      }
+
+      handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data.students && Array.isArray(data.students)) {
+              this.students = data.students;
+              this.database.saveStudents(this.students);
+              this.loadStudents();
+              this.clearSelection();
+              this.showDatabaseStatus('Data imported successfully!', 'success');
+            } else {
+              this.showDatabaseStatus('Invalid file format', 'error');
+            }
+          } catch (error) {
+            console.error('Error importing data:', error);
+            this.showDatabaseStatus('Error importing data', 'error');
+          }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+      }
+
+      resetTodayAttendance() {
+        if (!confirm('Reset today\'s attendance? This will clear ALL marks for today.')) {
+          return;
+        }
+        
+        this.students.forEach(student => {
+          student.scanned = false;
+          student.present = false;
+          student.check_in_time = null;
+        });
+        
+        this.database.saveStudents(this.students);
+        this.loadStudents();
+        this.clearSelection();
+        
+        this.showDatabaseStatus('Today\'s attendance reset', 'info');
+      }
+
+      startNewDay() {
+        if (!confirm('Start new day? Current data will be archived.')) {
+          return;
+        }
+        
+        // Archive current data
+        const archiveKey = `attendance_archive_${new Date().toISOString().split('T')[0]}`;
+        localStorage.setItem(archiveKey, JSON.stringify(this.students));
+        
+        // Reset all students
+        this.students.forEach(student => {
+          student.scanned = false;
+          student.present = false;
+          student.check_in_time = null;
+        });
+        
+        this.database.saveStudents(this.students);
+        this.loadStudents();
+        this.clearSelection();
+        this.showCurrentDate();
+        
+        this.showDatabaseStatus('New day started! Previous data archived.', 'success');
+      }
+
+      showDatabaseStatus(message, type = 'info') {
+        const colors = {
+          info: '#e7f3ff',
+          success: '#d4edda',
+          error: '#f8d7da'
+        };
+        
+        const textColors = {
+          info: '#004085',
+          success: '#155724',
+          error: '#721c24'
+        };
+        
+        this.dbStatus.textContent = message;
+        this.dbStatus.style.background = colors[type];
+        this.dbStatus.style.color = textColors[type];
+        this.dbStatus.className = "database-status show";
+        
+        setTimeout(() => {
+          this.dbStatus.className = "database-status";
+        }, 5000);
+      }
     }
 
     // Initialize system when page loads
     document.addEventListener('DOMContentLoaded', () => {
       new AttendanceSystem();
-    });
-
-    // Save data before page closes
-    window.addEventListener('beforeunload', (e) => {
-      // Optional: Add confirmation if there's unsaved data
-      // e.preventDefault();
-      // e.returnValue = '';
     });
   </script>
 </body>
